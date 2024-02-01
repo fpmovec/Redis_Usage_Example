@@ -1,12 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Redis_Usage_Example.Models;
+using Redis_Usage_Example.Services;
 
-namespace Redis_Usage_Example;
+namespace Redis_Usage_Example.Controllers;
 
-public class PersonsController : ControllerBase
+[ApiController]
+[Route("")]
+public class PersonsController(ICacheService service) : ControllerBase
 {
-    // GET
-    public IActionResult Index()
+    [HttpGet]
+    public async Task<IActionResult> Get([FromQuery]string key)
     {
-        return View();
+        var data = await service.GetAsync<Person>(key);
+
+        return Ok(data);
+    }
+
+    [HttpPost("/post")]
+    public async Task<IActionResult> Post([FromBody] Person person, [FromQuery]string key)
+    {
+        await service.SetAsync(key, person);
+
+        return Ok(await service.GetAsync<Person>(key));
     }
 }
